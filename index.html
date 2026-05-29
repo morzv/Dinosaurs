@@ -47,6 +47,33 @@
     .screen { display: none; }
     .screen.active { display: block; }
 
+    /* ── LANGUAGE TOGGLE ── */
+    .lang-row {
+      display: flex;
+      justify-content: flex-end;
+      padding: 4px 0 0;
+      gap: 6px;
+    }
+    .lang-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      padding: 5px 13px;
+      border-radius: 99px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .lang-btn:hover { color: var(--cream); border-color: var(--muted); }
+    .lang-btn.active {
+      border-color: var(--amber);
+      color: var(--amber);
+      background: rgba(232, 160, 32, 0.08);
+    }
+
     /* ── HEADER ── */
     .site-header {
       text-align: center;
@@ -360,28 +387,34 @@
 <body>
 <div id="app">
 
+  <!-- ═══ LANGUAGE TOGGLE ═══ -->
+  <div class="lang-row">
+    <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" id="btn-ru" onclick="setLang('ru')">RU</button>
+  </div>
+
   <!-- ═══ START SCREEN ═══ -->
   <div id="start-screen" class="screen active">
     <div class="site-header">
       <span class="emoji">🦕</span>
-      <h1>Dinosaur Quiz</h1>
-      <p class="subtitle">Muséum National d'Histoire Naturelle · Paris</p>
+      <h1 id="start-title">Dinosaur Quiz</h1>
+      <p class="subtitle" id="start-subtitle">Muséum National d'Histoire Naturelle · Paris</p>
     </div>
     <div class="start-card">
-      <p>How much do you know about the prehistoric giants that ruled our planet for over 160 million years?</p>
+      <p id="start-intro">How much do you know about the prehistoric giants that ruled our planet for over 160 million years?</p>
       <div class="pill-row">
-        <span class="pill">🦴 10 Questions</span>
-        <span class="pill">🏛️ Museum Edition</span>
-        <span class="pill">🌍 Jurassic & Beyond</span>
+        <span class="pill" id="pill1">🦴 10 Questions</span>
+        <span class="pill" id="pill2">🏛️ Museum Edition</span>
+        <span class="pill" id="pill3">🌍 Jurassic & Beyond</span>
       </div>
-      <button class="btn-primary" onclick="startQuiz()">Start Quiz</button>
+      <button class="btn-primary" id="start-btn" onclick="startQuiz()">Start Quiz</button>
     </div>
   </div>
 
   <!-- ═══ QUESTION SCREEN ═══ -->
   <div id="question-screen" class="screen">
     <div class="site-header" style="padding: 20px 0 16px;">
-      <h1 style="font-size:1.3rem;">🦕 Dinosaur Quiz</h1>
+      <h1 id="quiz-title" style="font-size:1.3rem;">🦕 Dinosaur Quiz</h1>
     </div>
 
     <div class="progress-wrapper">
@@ -408,9 +441,7 @@
     </div>
 
     <div class="next-row">
-      <button class="btn-primary hidden" id="next-btn" onclick="nextQuestion()">
-        Next →
-      </button>
+      <button class="btn-primary hidden" id="next-btn" onclick="nextQuestion()">Next →</button>
     </div>
   </div>
 
@@ -418,7 +449,7 @@
   <div id="result-screen" class="screen">
     <div class="site-header">
       <span class="emoji">🏆</span>
-      <h1>Quiz Complete!</h1>
+      <h1 id="result-screen-title">Quiz Complete!</h1>
     </div>
     <div class="result-card">
       <div class="score-ring">
@@ -441,8 +472,8 @@
       <div class="result-title" id="result-title"></div>
       <div class="result-message" id="result-message"></div>
       <div class="result-actions">
-        <button class="btn-primary" onclick="restartQuiz()">Play Again 🔁</button>
-        <button class="btn-secondary" onclick="shareResult()">Share Result 📤</button>
+        <button class="btn-primary" id="play-again-btn" onclick="restartQuiz()">Play Again 🔁</button>
+        <button class="btn-secondary" id="share-btn" onclick="shareResult()">Share Result 📤</button>
       </div>
     </div>
   </div>
@@ -451,114 +482,302 @@
 
 <script>
 const LETTERS = ['A', 'B', 'C', 'D'];
-
-const questions = [
-  {
-    dino: "Tyrannosaurus Rex",
-    image: "images/tyrannosaurus.jpg",
-    fallback: "🦖",
-    question: "What does the name 'Tyrannosaurus Rex' mean?",
-    answers: ["Tyrant lizard king", "Giant thunder beast", "Ancient fierce hunter", "King of all reptiles"],
-    correct: 0,
-    fact: "<strong>Tyranno</strong> = tyrant, <strong>saurus</strong> = lizard (Greek), <strong>rex</strong> = king (Latin). The full name means <em>Tyrant Lizard King</em> — a fitting title for one of the largest land predators ever."
-  },
-  {
-    dino: "Triceratops",
-    image: "images/triceratops.jpg",
-    fallback: "🦕",
-    question: "How many horns does a Triceratops have?",
-    answers: ["1", "2", "3", "4"],
-    correct: 2,
-    fact: "<strong>Three horns</strong> — two long brow horns (up to 1 metre each!) and one shorter nose horn. The name literally means <em>three-horned face</em> in Greek."
-  },
-  {
-    dino: "Stegosaurus",
-    image: "images/stegosaurus.jpg",
-    fallback: "🦕",
-    question: "During which geological period did Stegosaurus live?",
-    answers: ["Triassic (252–201 Ma)", "Jurassic (201–145 Ma)", "Cretaceous (145–66 Ma)", "Permian (299–252 Ma)"],
-    correct: 1,
-    fact: "Stegosaurus lived in the <strong>Late Jurassic</strong>, around 155–150 million years ago — the same period as Brachiosaurus and Allosaurus. Its large back plates may have been used for temperature regulation or display."
-  },
-  {
-    dino: "Velociraptor",
-    image: "images/velociraptor.jpg",
-    fallback: "🦖",
-    question: "How big was a real Velociraptor?",
-    answers: ["About the size of a horse", "About 2 metres tall", "About the size of a turkey", "About 5 metres long"],
-    correct: 2,
-    fact: "Real Velociraptors were only <strong>about the size of a turkey</strong> — roughly 60 cm tall! The Hollywood version from Jurassic Park was based on Deinonychus. Real raptors were also covered in feathers."
-  },
-  {
-    dino: "Brachiosaurus",
-    image: "images/brachiosaurus.jpg",
-    fallback: "🦕",
-    question: "What did Brachiosaurus mainly eat?",
-    answers: ["Fish and aquatic creatures", "Other dinosaurs and carrion", "Leaves from tall treetops", "Roots and underground fungi"],
-    correct: 2,
-    fact: "Brachiosaurus was an <strong>herbivore</strong> that used its incredibly long neck to reach leaves at the tops of trees — like a giant giraffe. It could browse at heights of up to 13 metres."
-  },
-  {
-    dino: "Diplodocus",
-    image: "images/diplodocus.jpg",
-    fallback: "🦕",
-    question: "How long could Diplodocus grow?",
-    answers: ["Up to 15 metres", "Up to 20 metres", "Up to 27 metres", "Up to 40 metres"],
-    correct: 2,
-    fact: "Diplodocus could reach <strong>up to 27 metres</strong> long, making it one of the longest dinosaurs ever discovered. Much of that length was its whip-like tail, which it may have cracked like a bullwhip!"
-  },
-  {
-    dino: "Ankylosaurus",
-    image: "images/ankylosaurus.jpg",
-    fallback: "🦕",
-    question: "What weapon did Ankylosaurus have at the end of its tail?",
-    answers: ["Sharp bone spikes", "A massive bony club", "Venomous barbs", "A razor-sharp blade"],
-    correct: 1,
-    fact: "Ankylosaurus had a <strong>massive bony club</strong> at the end of its tail, made of fused bone. Scientists estimate it could swing with enough force to break the leg bones of a T. rex!"
-  },
-  {
-    dino: "Spinosaurus",
-    image: "images/spinosaurus.jpg",
-    fallback: "🦖",
-    question: "What makes Spinosaurus unique among large predatory dinosaurs?",
-    answers: ["It could fly short distances", "It only ate plants", "It was semi-aquatic and hunted fish", "It had the largest brain"],
-    correct: 2,
-    fact: "Spinosaurus is believed to have been <strong>semi-aquatic</strong> — short, dense legs, dense bones for buoyancy, and crocodile-like jaws suggest it hunted fish in rivers. It may also have been the <em>longest</em> predatory dinosaur at over 14 metres."
-  },
-  {
-    dino: "Parasaurolophus",
-    image: "images/parasaurolophus.jpg",
-    fallback: "🦕",
-    question: "What was the large hollow crest on Parasaurolophus's head likely used for?",
-    answers: ["Charging at predators", "Making loud calls to communicate", "Storing extra water", "Detecting smells from far away"],
-    correct: 1,
-    fact: "The hollow crest acted like a <strong>musical instrument</strong> — air resonating through its internal tubes could produce deep, trombone-like calls for communicating with the herd and attracting mates."
-  },
-  {
-    dino: "Pterodactylus",
-    image: "images/pterodactylus.jpg",
-    fallback: "🐉",
-    question: "Were Pterodactyls (pterosaurs) actually dinosaurs?",
-    answers: [
-      "Yes — they were flying dinosaurs",
-      "No — they were a separate group of flying reptiles",
-      "Yes — they evolved from birds",
-      "No — they were ancient mammals"
-    ],
-    correct: 1,
-    fact: "Pterosaurs were <strong>not dinosaurs</strong> — they were a separate, closely related group of flying reptiles. True dinosaurs, by definition, are land animals. Pterosaurs were the first vertebrates to achieve powered flight, over 228 million years ago."
-  }
-];
-
+let currentLang = 'en';
 let currentIndex = 0;
 let score = 0;
 let answered = false;
+
+/* ── TRANSLATIONS ── */
+const i18n = {
+  en: {
+    title: "Dinosaur Quiz",
+    subtitle: "Muséum National d'Histoire Naturelle · Paris",
+    intro: "How much do you know about the prehistoric giants that ruled our planet for over 160 million years?",
+    pill1: "🦴 10 Questions",
+    pill2: "🏛️ Museum Edition",
+    pill3: "🌍 Jurassic & Beyond",
+    startBtn: "Start Quiz",
+    questionOf: (n, t) => `Question ${n} of ${t}`,
+    scoreLabel: s => `Score: ${s}`,
+    didYouKnow: "Did you know?",
+    nextBtn: "Next →",
+    seeResults: "See Results 🏆",
+    resultTitle: "Quiz Complete!",
+    playAgain: "Play Again 🔁",
+    share: "Share Result 📤",
+    shareText: (s, url) => `🦕 I scored ${s}/10 on the Dinosaur Quiz! Can you beat me? Try it at ${url}`,
+    clipboardMsg: "Result copied to clipboard!",
+    results: [
+      { min: 9, title: "Palaeontologist! 🏅", msg: "Extraordinary! You know dinosaurs better than most experts. The museum curators would be impressed!" },
+      { min: 7, title: "Dino Enthusiast! 🌟", msg: "Excellent work! You clearly have a passion for prehistoric life. A few more visits and you'll be the expert!" },
+      { min: 5, title: "Fossil Hunter 🔍", msg: "Good job! You know your way around the Cretaceous. A walk through the museum will fill in the rest!" },
+      { min: 3, title: "Curious Explorer 🗺️", msg: "Not bad for a start! The prehistoric world has many more secrets to reveal — enjoy the museum!" },
+      { min: 0, title: "Budding Discoverer 🥚", msg: "Every palaeontologist starts somewhere! Take this quiz again after your museum tour — you'll be amazed how much you learn." }
+    ]
+  },
+  ru: {
+    title: "Квиз о Динозаврах",
+    subtitle: "Национальный музей естественной истории · Париж",
+    intro: "Насколько хорошо вы знаете доисторических гигантов, правивших нашей планетой более 160 миллионов лет?",
+    pill1: "🦴 10 Вопросов",
+    pill2: "🏛️ Музейное издание",
+    pill3: "🌍 Юра и Мел",
+    startBtn: "Начать квиз",
+    questionOf: (n, t) => `Вопрос ${n} из ${t}`,
+    scoreLabel: s => `Счёт: ${s}`,
+    didYouKnow: "Интересный факт!",
+    nextBtn: "Далее →",
+    seeResults: "Результаты 🏆",
+    resultTitle: "Квиз пройден!",
+    playAgain: "Играть снова 🔁",
+    share: "Поделиться 📤",
+    shareText: (s, url) => `🦕 Я набрал ${s}/10 в Квизе о Динозаврах! Попробуй сам: ${url}`,
+    clipboardMsg: "Результат скопирован в буфер обмена!",
+    results: [
+      { min: 9, title: "Палеонтолог! 🏅", msg: "Потрясающе! Вы знаете динозавров лучше большинства экспертов. Хранители музея были бы впечатлены!" },
+      { min: 7, title: "Знаток динозавров! 🌟", msg: "Отличная работа! Вы явно увлечены доисторической жизнью. Ещё пара посещений — и вы сами станете экспертом!" },
+      { min: 5, title: "Искатель окаменелостей 🔍", msg: "Хороший результат! Вы неплохо ориентируетесь в меловом периоде. Прогулка по музею заполнит пробелы!" },
+      { min: 3, title: "Любознательный путешественник 🗺️", msg: "Неплохое начало! Доисторический мир хранит ещё много тайн — наслаждайтесь музеем!" },
+      { min: 0, title: "Начинающий первооткрыватель 🥚", msg: "Каждый палеонтолог с чего-то начинает! Пройдите квиз снова после экскурсии по музею — вы удивитесь, как много узнаете." }
+    ]
+  }
+};
+
+/* ── QUESTIONS ── */
+const questions = {
+  en: [
+    {
+      dino: "Tyrannosaurus Rex",
+      image: "images/tyrannosaurus.jpg",
+      fallback: "🦖",
+      question: "What does the name 'Tyrannosaurus Rex' mean?",
+      answers: ["Tyrant lizard king", "Giant thunder beast", "Ancient fierce hunter", "King of all reptiles"],
+      correct: 0,
+      fact: "<strong>Tyranno</strong> = tyrant, <strong>saurus</strong> = lizard (Greek), <strong>rex</strong> = king (Latin). The full name means <em>Tyrant Lizard King</em> — a fitting title for one of the largest land predators ever."
+    },
+    {
+      dino: "Triceratops",
+      image: "images/triceratops.jpg",
+      fallback: "🦕",
+      question: "How many horns does a Triceratops have?",
+      answers: ["1", "2", "3", "4"],
+      correct: 2,
+      fact: "<strong>Three horns</strong> — two long brow horns (up to 1 metre each!) and one shorter nose horn. The name literally means <em>three-horned face</em> in Greek."
+    },
+    {
+      dino: "Stegosaurus",
+      image: "images/stegosaurus.jpg",
+      fallback: "🦕",
+      question: "During which geological period did Stegosaurus live?",
+      answers: ["Triassic (252–201 Ma)", "Jurassic (201–145 Ma)", "Cretaceous (145–66 Ma)", "Permian (299–252 Ma)"],
+      correct: 1,
+      fact: "Stegosaurus lived in the <strong>Late Jurassic</strong>, around 155–150 million years ago — the same period as Brachiosaurus and Allosaurus. Its large back plates may have been used for temperature regulation or display."
+    },
+    {
+      dino: "Velociraptor",
+      image: "images/velociraptor.jpg",
+      fallback: "🦖",
+      question: "How big was a real Velociraptor?",
+      answers: ["About the size of a horse", "About 2 metres tall", "About the size of a turkey", "About 5 metres long"],
+      correct: 2,
+      fact: "Real Velociraptors were only <strong>about the size of a turkey</strong> — roughly 60 cm tall! The Hollywood version from Jurassic Park was based on Deinonychus. Real raptors were also covered in feathers."
+    },
+    {
+      dino: "Brachiosaurus",
+      image: "images/brachiosaurus.jpg",
+      fallback: "🦕",
+      question: "What did Brachiosaurus mainly eat?",
+      answers: ["Fish and aquatic creatures", "Other dinosaurs and carrion", "Leaves from tall treetops", "Roots and underground fungi"],
+      correct: 2,
+      fact: "Brachiosaurus was an <strong>herbivore</strong> that used its incredibly long neck to reach leaves at the tops of trees — like a giant giraffe. It could browse at heights of up to 13 metres."
+    },
+    {
+      dino: "Diplodocus",
+      image: "images/diplodocus.jpg",
+      fallback: "🦕",
+      question: "How long could Diplodocus grow?",
+      answers: ["Up to 15 metres", "Up to 20 metres", "Up to 27 metres", "Up to 40 metres"],
+      correct: 2,
+      fact: "Diplodocus could reach <strong>up to 27 metres</strong> long, making it one of the longest dinosaurs ever discovered. Much of that length was its whip-like tail, which it may have cracked like a bullwhip!"
+    },
+    {
+      dino: "Ankylosaurus",
+      image: "images/ankylosaurus.jpg",
+      fallback: "🦕",
+      question: "What weapon did Ankylosaurus have at the end of its tail?",
+      answers: ["Sharp bone spikes", "A massive bony club", "Venomous barbs", "A razor-sharp blade"],
+      correct: 1,
+      fact: "Ankylosaurus had a <strong>massive bony club</strong> at the end of its tail, made of fused bone. Scientists estimate it could swing with enough force to break the leg bones of a T. rex!"
+    },
+    {
+      dino: "Spinosaurus",
+      image: "images/spinosaurus.jpg",
+      fallback: "🦖",
+      question: "What makes Spinosaurus unique among large predatory dinosaurs?",
+      answers: ["It could fly short distances", "It only ate plants", "It was semi-aquatic and hunted fish", "It had the largest brain"],
+      correct: 2,
+      fact: "Spinosaurus is believed to have been <strong>semi-aquatic</strong> — short, dense legs, dense bones for buoyancy, and crocodile-like jaws suggest it hunted fish in rivers. It may also have been the <em>longest</em> predatory dinosaur at over 14 metres."
+    },
+    {
+      dino: "Parasaurolophus",
+      image: "images/parasaurolophus.jpg",
+      fallback: "🦕",
+      question: "What was the large hollow crest on Parasaurolophus's head likely used for?",
+      answers: ["Charging at predators", "Making loud calls to communicate", "Storing extra water", "Detecting smells from far away"],
+      correct: 1,
+      fact: "The hollow crest acted like a <strong>musical instrument</strong> — air resonating through its internal tubes could produce deep, trombone-like calls for communicating with the herd and attracting mates."
+    },
+    {
+      dino: "Pterodactylus",
+      image: "images/pterodactylus.jpg",
+      fallback: "🐉",
+      question: "Were Pterodactyls (pterosaurs) actually dinosaurs?",
+      answers: [
+        "Yes — they were flying dinosaurs",
+        "No — they were a separate group of flying reptiles",
+        "Yes — they evolved from birds",
+        "No — they were ancient mammals"
+      ],
+      correct: 1,
+      fact: "Pterosaurs were <strong>not dinosaurs</strong> — they were a separate, closely related group of flying reptiles. True dinosaurs, by definition, are land animals. Pterosaurs were the first vertebrates to achieve powered flight, over 228 million years ago."
+    }
+  ],
+  ru: [
+    {
+      dino: "Тираннозавр Рекс",
+      image: "images/tyrannosaurus.jpg",
+      fallback: "🦖",
+      question: "Что означает имя «Tyrannosaurus Rex»?",
+      answers: ["Тиран-ящер-царь", "Гигантский громовой зверь", "Древний свирепый охотник", "Повелитель всех рептилий"],
+      correct: 0,
+      fact: "<strong>Tyranno</strong> = тиран, <strong>saurus</strong> = ящер (греч.), <strong>rex</strong> = царь (лат.). Полное имя означает <em>Тиран-ящер-царь</em> — подходящий титул для одного из крупнейших наземных хищников в истории."
+    },
+    {
+      dino: "Трицератопс",
+      image: "images/triceratops.jpg",
+      fallback: "🦕",
+      question: "Сколько рогов у трицератопса?",
+      answers: ["1", "2", "3", "4"],
+      correct: 2,
+      fact: "<strong>Три рога</strong> — два длинных надглазничных (до 1 метра каждый!) и один более короткий носовой. Имя буквально означает <em>трёхрогая морда</em> по-гречески."
+    },
+    {
+      dino: "Стегозавр",
+      image: "images/stegosaurus.jpg",
+      fallback: "🦕",
+      question: "В какой геологический период жил стегозавр?",
+      answers: ["Триасовый (252–201 млн л.н.)", "Юрский (201–145 млн л.н.)", "Меловой (145–66 млн л.н.)", "Пермский (299–252 млн л.н.)"],
+      correct: 1,
+      fact: "Стегозавр жил в <strong>позднем юрском периоде</strong>, около 155–150 миллионов лет назад — в то же время, что брахиозавр и аллозавр. Его большие пластины на спине, возможно, использовались для терморегуляции или привлечения партнёров."
+    },
+    {
+      dino: "Велоцираптор",
+      image: "images/velociraptor.jpg",
+      fallback: "🦖",
+      question: "Каким был настоящий велоцираптор по размеру?",
+      answers: ["Примерно с лошадь", "Около 2 метров в высоту", "Примерно с индейку", "Около 5 метров в длину"],
+      correct: 2,
+      fact: "Настоящие велоцирапторы были размером лишь <strong>с индейку</strong> — около 60 см в высоту! Голливудская версия из «Парка Юрского периода» основана на дейнонихе. Настоящие рапторы были покрыты перьями."
+    },
+    {
+      dino: "Брахиозавр",
+      image: "images/brachiosaurus.jpg",
+      fallback: "🦕",
+      question: "Чем в основном питался брахиозавр?",
+      answers: ["Рыбой и водными животными", "Другими динозаврами и падалью", "Листьями с верхушек деревьев", "Кореньями и подземными грибами"],
+      correct: 2,
+      fact: "Брахиозавр был <strong>травоядным</strong> и использовал свою невероятно длинную шею, чтобы доставать листья на верхушках деревьев — как гигантский жираф. Он мог пастись на высоте до 13 метров."
+    },
+    {
+      dino: "Диплодок",
+      image: "images/diplodocus.jpg",
+      fallback: "🦕",
+      question: "Какой длины мог достигать диплодок?",
+      answers: ["До 15 метров", "До 20 метров", "До 27 метров", "До 40 метров"],
+      correct: 2,
+      fact: "Диплодок мог достигать <strong>до 27 метров</strong> в длину — он один из самых длинных динозавров в истории. Бо́льшая часть длины приходилась на хвост-хлыст, которым он, возможно, щёлкал с оглушительным звуком!"
+    },
+    {
+      dino: "Анкилозавр",
+      image: "images/ankylosaurus.jpg",
+      fallback: "🦕",
+      question: "Какое оружие было у анкилозавра на конце хвоста?",
+      answers: ["Острые костяные шипы", "Массивная костяная булава", "Ядовитые колючки", "Острое как бритва лезвие"],
+      correct: 1,
+      fact: "У анкилозавра была <strong>массивная костяная булава</strong> на конце хвоста из сросшихся костей. По расчётам учёных, удар был достаточно сильным, чтобы сломать кость ноги тираннозавра!"
+    },
+    {
+      dino: "Спинозавр",
+      image: "images/spinosaurus.jpg",
+      fallback: "🦖",
+      question: "Чем спинозавр уникален среди крупных хищных динозавров?",
+      answers: ["Мог летать на короткие расстояния", "Питался только растениями", "Был полуводным и охотился на рыбу", "Имел самый большой мозг"],
+      correct: 2,
+      fact: "Считается, что спинозавр был <strong>полуводным</strong> — короткие плотные ноги, тяжёлые кости и пасть, похожая на крокодилью, указывают на охоту в реках. Он также мог быть <em>самым длинным</em> хищным динозавром — более 14 метров."
+    },
+    {
+      dino: "Паразауролоф",
+      image: "images/parasaurolophus.jpg",
+      fallback: "🦕",
+      question: "Для чего, вероятно, служил большой полый гребень на голове паразауролофа?",
+      answers: ["Для атаки на хищников", "Для громких криков и общения", "Для хранения запасов воды", "Для обнаружения запахов на расстоянии"],
+      correct: 1,
+      fact: "Полый гребень действовал как <strong>музыкальный инструмент</strong> — воздух, резонирующий в его трубках, создавал глубокие, похожие на тромбон звуки для общения со стадом и привлечения партнёров."
+    },
+    {
+      dino: "Птеродактиль",
+      image: "images/pterodactylus.jpg",
+      fallback: "🐉",
+      question: "Были ли птеродактили (птерозавры) настоящими динозаврами?",
+      answers: [
+        "Да — они были летающими динозаврами",
+        "Нет — отдельная группа летающих рептилий",
+        "Да — они произошли от птиц",
+        "Нет — это древние млекопитающие"
+      ],
+      correct: 1,
+      fact: "Птерозавры <strong>не были динозаврами</strong> — они составляли отдельную, родственную группу летающих рептилий. Настоящие динозавры — наземные животные. Птерозавры стали первыми позвоночными, освоившими активный полёт, более 228 миллионов лет назад."
+    }
+  ]
+};
+
+/* ── HELPERS ── */
+function tx() { return i18n[currentLang]; }
+function qs() { return questions[currentLang]; }
 
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
+/* ── LANGUAGE SWITCH ── */
+function setLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-ru').classList.toggle('active', lang === 'ru');
+  updateStaticText();
+  const activeId = document.querySelector('.screen.active')?.id;
+  if (activeId === 'question-screen') renderQuestion();
+  if (activeId === 'result-screen') renderResultText();
+}
+
+function updateStaticText() {
+  const t = tx();
+  document.getElementById('start-title').textContent = t.title;
+  document.getElementById('start-subtitle').textContent = t.subtitle;
+  document.getElementById('start-intro').textContent = t.intro;
+  document.getElementById('pill1').textContent = t.pill1;
+  document.getElementById('pill2').textContent = t.pill2;
+  document.getElementById('pill3').textContent = t.pill3;
+  document.getElementById('start-btn').textContent = t.startBtn;
+  document.getElementById('quiz-title').textContent = '🦕 ' + t.title;
+  document.getElementById('result-screen-title').textContent = t.resultTitle;
+  document.getElementById('play-again-btn').textContent = t.playAgain;
+  document.getElementById('share-btn').textContent = t.share;
+}
+
+/* ── QUIZ LOGIC ── */
 function startQuiz() {
   currentIndex = 0;
   score = 0;
@@ -568,12 +787,13 @@ function startQuiz() {
 }
 
 function renderQuestion() {
-  const q = questions[currentIndex];
+  const q = qs()[currentIndex];
+  const t = tx();
   answered = false;
 
-  document.getElementById('q-label').textContent = `Question ${currentIndex + 1} of ${questions.length}`;
-  document.getElementById('q-score').textContent = `Score: ${score}`;
-  document.getElementById('progress-fill').style.width = `${(currentIndex / questions.length) * 100}%`;
+  document.getElementById('q-label').textContent = t.questionOf(currentIndex + 1, qs().length);
+  document.getElementById('q-score').textContent = t.scoreLabel(score);
+  document.getElementById('progress-fill').style.width = `${(currentIndex / qs().length) * 100}%`;
 
   document.getElementById('dino-name').textContent = q.dino;
   document.getElementById('question-text').textContent = q.question;
@@ -586,9 +806,7 @@ function renderQuestion() {
   img.src = q.image;
   img.alt = q.dino;
 
-  const card = document.getElementById('question-card');
-  card.className = 'question-card';
-
+  document.getElementById('question-card').className = 'question-card';
   const factBox = document.getElementById('fact-box');
   factBox.className = 'fact-box';
   factBox.innerHTML = '';
@@ -610,7 +828,8 @@ function selectAnswer(index) {
   if (answered) return;
   answered = true;
 
-  const q = questions[currentIndex];
+  const q = qs()[currentIndex];
+  const t = tx();
   const buttons = document.querySelectorAll('.answer-btn');
   const card = document.getElementById('question-card');
 
@@ -627,20 +846,20 @@ function selectAnswer(index) {
     card.classList.add('wrong');
   }
 
-  document.getElementById('q-score').textContent = `Score: ${score}`;
+  document.getElementById('q-score').textContent = t.scoreLabel(score);
 
   const factBox = document.getElementById('fact-box');
-  factBox.innerHTML = `🦴 <strong>Did you know?</strong> ${q.fact}`;
+  factBox.innerHTML = `🦴 <strong>${t.didYouKnow}</strong> ${q.fact}`;
   factBox.classList.add('visible');
 
   const nextBtn = document.getElementById('next-btn');
-  nextBtn.textContent = currentIndex < questions.length - 1 ? 'Next →' : 'See Results 🏆';
+  nextBtn.textContent = currentIndex < qs().length - 1 ? t.nextBtn : t.seeResults;
   nextBtn.classList.remove('hidden');
 }
 
 function nextQuestion() {
   currentIndex++;
-  if (currentIndex >= questions.length) {
+  if (currentIndex >= qs().length) {
     showResults();
   } else {
     renderQuestion();
@@ -649,28 +868,27 @@ function nextQuestion() {
 
 function showResults() {
   show('result-screen');
-
   document.getElementById('final-score').textContent = score;
   document.getElementById('progress-fill').style.width = '100%';
 
   const circumference = 2 * Math.PI * 60;
-  const offset = circumference * (1 - score / questions.length);
+  const offset = circumference * (1 - score / qs().length);
   const ring = document.getElementById('score-ring-fill');
   ring.style.strokeDasharray = circumference;
   ring.style.strokeDashoffset = circumference;
   setTimeout(() => { ring.style.strokeDashoffset = offset; }, 100);
 
-  const messages = [
-    { min: 9, title: "Palaeontologist! 🏅", msg: "Extraordinary! You know dinosaurs better than most experts. The museum curators would be impressed!" },
-    { min: 7, title: "Dino Enthusiast! 🌟", msg: "Excellent work! You clearly have a passion for prehistoric life. A few more visits and you'll be the expert!" },
-    { min: 5, title: "Fossil Hunter 🔍", msg: "Good job! You know your way around the Cretaceous. A walk through the museum will fill in the rest!" },
-    { min: 3, title: "Curious Explorer 🗺️", msg: "Not bad for a start! The prehistoric world has many more secrets to reveal — enjoy the museum!" },
-    { min: 0, title: "Budding Discoverer 🥚", msg: "Every palaeontologist starts somewhere! Take this quiz again after your museum tour — you'll be amazed how much you learn." }
-  ];
+  renderResultText();
+}
 
-  const result = messages.find(m => score >= m.min);
+function renderResultText() {
+  const t = tx();
+  document.getElementById('result-screen-title').textContent = t.resultTitle;
+  const result = t.results.find(m => score >= m.min);
   document.getElementById('result-title').textContent = result.title;
   document.getElementById('result-message').textContent = result.msg;
+  document.getElementById('play-again-btn').textContent = t.playAgain;
+  document.getElementById('share-btn').textContent = t.share;
 }
 
 function restartQuiz() {
@@ -678,11 +896,12 @@ function restartQuiz() {
 }
 
 function shareResult() {
-  const text = `🦕 I scored ${score}/10 on the Dinosaur Quiz! Can you beat me? Try it at ${location.href}`;
+  const t = tx();
+  const text = t.shareText(score, location.href);
   if (navigator.share) {
-    navigator.share({ title: 'Dinosaur Quiz', text });
+    navigator.share({ title: tx().title, text });
   } else {
-    navigator.clipboard.writeText(text).then(() => alert('Result copied to clipboard!'));
+    navigator.clipboard.writeText(text).then(() => alert(t.clipboardMsg));
   }
 }
 </script>
